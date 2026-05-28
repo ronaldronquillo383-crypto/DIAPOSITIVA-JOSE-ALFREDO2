@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis del Impacto de la Falta de Sueño - Colegio Internacional CEBI</title>
+    
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js CDN for interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* ==========================================================================
+           1. ESTILOS BASE Y VARIABLES (SISTEMA DE DISEÑO)
+           ========================================================================== */
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #131b2e;
+            --accent-cyan: #00f0ff;
+            --accent-cyan-glow: rgba(0, 240, 255, 0.4);
+            --accent-green: #00ff87;
+            --accent-green-glow: rgba(0, 255, 135, 0.4);
+            --accent-pink: #ff007f;
+            --glass-bg: rgba(17, 25, 40, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #cbd5e1;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --transition-speed: 0.6s;
+            --slide-transition: cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow: hidden; /* Evita scrolls del navegador para emular presentación */
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+        }
+
+        /* Fondo dinámico animado */
+        .bg-glow-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-glow-circle-1 {
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+            filter: blur(80px);
+            animation: float 20s ease-in-out infinite alternate;
+        }
+
+        .bg-glow-circle-2 {
+            position: absolute;
+            bottom: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 135, 0.09) 0%, rgba(0, 0, 0, 0) 70%);
+            filter: blur(100px);
+            animation: float 25s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(50px) scale(1.1); }
+        }
+
+        /* ==========================================================================
+           2. CONTENEDOR PRINCIPAL Y VISOR DE DIAPOSITIVAS
+           ========================================================================== */
+        .presentation-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        /* Header superior */
+        header {
+            height: 60px;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 20;
+        }
+
+        .header-logo {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            max-width: 60%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-control:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+            box-shadow: 0 0 15px var(--accent-cyan-glow);
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+
+        /* Contenedor central de diapositivas */
+        .slides-container {
+            flex: 1;
+            position: relative;
+            perspective: 1200px;
+            overflow: hidden;
+        }
+
+        /* Estilo base de una diapositiva */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px 60px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(100px) rotateY(-5deg);
+            transition: opacity var(--transition-speed) var(--slide-transition),
+                        transform var(--transition-speed) var(--slide-transition),
+                        visibility var(--transition-speed);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            z-index: 1;
+        }
+
+        /* Diapositiva Activa */
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0) rotateY(0deg);
+            z-index: 2;
+        }
+
+        /* Diapositiva Pasada */
+        .slide.prev {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-100px) rotateY(5deg);
+        }
+
+        /* ==========================================================================
+           3. ESTRUCTURA INTERNA DE LAS DIAPOSITIVAS (DISEÑO GRID / FLEX)
+           ========================================================================== */
+        .slide-header {
+            margin-bottom: 25px;
+            border-left: 4px solid var(--accent-cyan);
+            padding-left: 15px;
+        }
+
+        .slide-subtitle {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .slide-title {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            position: relative;
+            overflow-y: auto; /* Permite scroll interno si el texto se desborda en pantallas pequeñas */
+            padding-right: 10px;
+        }
+
+        /* Scrollbar personalizado para el cuerpo de diapositivas */
+        .slide-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .slide-body::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .slide-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        .slide-body::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+
+        .grid-2-cols {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .grid-3-cols {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        /* Tarjeta de cristal (Glass Card) */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 240, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.05);
+        }
+
+        .glass-card.highlight {
+            border-color: rgba(0, 255, 135, 0.3);
+        }
+        .glass-card.highlight:hover {
+            border-color: var(--accent-green);
+            box-shadow: 0 10px 30px rgba(0, 255, 135, 0.08);
+        }
+
+        .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Listas y viñetas modernas */
+        .modern-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modern-list li {
+            position: relative;
+            padding-left: 28px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        .modern-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            top: 2px;
+            width: 18px;
+            height: 18px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 50%;
+            color: var(--accent-cyan);
+            font-size: 0.65rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modern-list.green li::before {
+            content: "➔";
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            background: rgba(0, 255, 135, 0.1);
+        }
+
+        /* ==========================================================================
+           4. PORTADA (DIAPOSITIVA 1) - ESTILO ESPECTACULAR
+           ========================================================================== */
+        .slide-cover {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 !important;
+            background: radial-gradient(circle at 60% 50%, rgba(19, 27, 46, 0.4) 0%, var(--bg-primary) 100%);
+            overflow: hidden;
+        }
+
+        .cover-content {
+            width: 55%;
+            height: 100%;
+            padding: 80px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 10;
+            position: relative;
+            background: linear-gradient(90deg, var(--bg-primary) 85%, rgba(11, 15, 25, 0.3) 100%);
+        }
+
+        .cover-badge {
+            align-self: flex-start;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+        }
+
+        .cover-title {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 900;
+            line-height: 1.15;
+            letter-spacing: -1px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #ffffff 30%, var(--text-muted) 80%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cover-meta {
+            border-top: 1px solid var(--glass-border);
+            padding-top: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--accent-green);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .cover-visual {
+            width: 45%;
+            height: 100%;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cover-visual::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--bg-primary) 0%, rgba(11, 15, 25, 0) 30%, rgba(11, 15, 25, 0) 70%, var(--bg-primary) 100%);
+            pointer-events: none;
+        }
+
+        .visual-glow {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-cyan-glow) 0%, rgba(0, 0, 0, 0) 70%);
+            filter: blur(20px);
+            z-index: 5;
+            animation: pulse 4s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* ==========================================================================
+           5. RESUMEN / INDICADORES CLAVE (DIAPOSITIVA 2) - MÉTRICAS DE IMPACTO
+           ========================================================================== */
+        .metric-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            height: 100%;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(17, 25, 40, 0.8) 0%, rgba(19, 27, 46, 0.4) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 35px 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent-cyan-glow);
+            box-shadow: 0 15px 35px rgba(0, 240, 255, 0.1);
+        }
+
+        .metric-value {
+            font-family: var(--font-display);
+            font-size: 4.8rem;
+            font-weight: 900;
+            line-height: 1;
+            margin: 15px 0;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(0, 240, 255, 0.2);
+        }
+
+        .metric-label {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .metric-desc {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* ==========================================================================
+           6. TABLAS ESTILIZADAS (DIAPOSITIVAS DE MARCO CONCEPTUAL Y RESULTADOS)
+           ========================================================================== */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-body);
+            text-align: left;
+        }
+
+        .modern-table th {
+            background: rgba(19, 27, 46, 0.9);
+            color: var(--accent-cyan);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 14px 20px;
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .modern-table td {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            transition: background 0.2s ease;
+        }
+
+        .modern-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .modern-table tr:hover td {
+            background: rgba(0, 240, 255, 0.03);
+            color: var(--text-main);
+        }
+
+        .badge-table {
+            background: rgba(255, 0, 127, 0.15);
+            border: 1px solid var(--accent-pink);
+            color: #ff66b2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .badge-table.cyan {
+            background: rgba(0, 240, 255, 0.15);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .badge-table.green {
+            background: rgba(0, 255, 135, 0.15);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        /* ==========================================================================
+           7. DASHBOARD DE RESULTADOS INTERACTIVO (DIAPOSITIVA 10) - ESTRELLA DE LA APP
+           ========================================================================== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+            height: 100%;
+        }
+
+        /* Panel izquierdo de preguntas */
+        .dashboard-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            padding-right: 8px;
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .dashboard-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .dashboard-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .tab-btn span.tab-num {
+            font-weight: 800;
+            color: var(--accent-cyan);
+            opacity: 0.7;
+        }
+
+        .tab-btn:hover {
+            background: rgba(0, 240, 255, 0.05);
+            color: var(--text-main);
+            border-color: rgba(0, 240, 255, 0.2);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(19, 27, 46, 0.8) 100%);
+            border-color: var(--accent-cyan);
+            color: var(--text-main);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+        }
+
+        /* Panel derecho de visualización del gráfico */
+        .dashboard-view {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chart-card {
+            background: rgba(13, 20, 35, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 250px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            max-height: 260px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Gráfico SVG alternativo ultra-rápido en caso de que Chart.js no cargue */
+        .svg-fallback-chart {
+            display: none; /* Se activa si Chart.js falla */
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-info {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px 20px;
+        }
+
+        .chart-info-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--accent-cyan);
+            margin-bottom: 5px;
+        }
+
+        .chart-info-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* ==========================================================================
+           8. CONTROLES DE NAVEGACIÓN Y BARRA DE PROGRESO (PARTE INFERIOR)
+           ========================================================================== */
+        .navigation-bar {
+            height: 70px;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(11, 15, 25, 0.9);
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .progress-indicator-container {
+            flex: 1;
+            max-width: 50%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .progress-text {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 6.67%; /* 1/15 base */
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+            border-radius: 3px;
+            transition: width 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 10px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-nav:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            color: var(--bg-primary);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 15px var(--accent-cyan-glow);
+            transform: translateY(-2px);
+        }
+
+        .btn-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ==========================================================================
+           9. MENÚ DE NAVEGACIÓN LATERAL INDICE
+           ========================================================================== */
+        .sidebar-index {
+            position: fixed;
+            top: 60px;
+            left: -320px;
+            width: 320px;
+            height: calc(100vh - 130px);
+            background: rgba(13, 20, 35, 0.95);
+            border-right: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            z-index: 50;
+            transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-index.open {
+            left: 0;
+            box-shadow: 15px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .index-title {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .index-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 5px;
+        }
+
+        .index-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .index-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .index-item {
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+        }
+
+        .index-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            border-color: rgba(0, 240, 255, 0.1);
+        }
+
+        .index-item.active {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--accent-cyan);
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .index-badge {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .index-item.active .index-badge {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        /* Overlay para cerrar sidebar al hacer clic fuera */
+        .sidebar-overlay {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 130px);
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 40;
+            display: none;
+            backdrop-filter: blur(2px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* ==========================================================================
+           10. DISEÑO RESPONSIVO (AJUSTES PARA TABLETAS Y MOVILES)
+           ========================================================================== */
+        @media (max-width: 1024px) {
+            .slide {
+                padding: 30px 40px;
+            }
+            .slide-title {
+                font-size: 1.8rem;
+            }
+            .cover-title {
+                font-size: 2rem;
+            }
+            .metric-value {
+                font-size: 3.5rem;
+            }
+            .dashboard-container {
+                grid-template-columns: 220px 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow: auto; /* Permite scroll del navegador en pantallas muy pequeñas */
+            }
+            .presentation-wrapper {
+                height: auto;
+                min-height: 100vh;
+            }
+            header {
+                padding: 0 20px;
+            }
+            .header-title {
+                display: none;
+            }
+            .slide {
+                position: relative;
+                height: auto;
+                min-height: calc(100vh - 130px);
+                display: none;
+                opacity: 0;
+                transform: none;
+                padding: 25px 20px;
+            }
+            .slide.active {
+                display: flex;
+                opacity: 1;
+                transform: none;
+            }
+            .slide-cover {
+                flex-direction: column;
+                height: auto;
+            }
+            .cover-content {
+                width: 100%;
+                padding: 40px 20px;
+            }
+            .cover-visual {
+                width: 100%;
+                height: 250px;
+            }
+            .metric-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .grid-2-cols, .grid-3-cols {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-sidebar {
+                flex-direction: row;
+                border-right: none;
+                border-bottom: 1px solid var(--glass-border);
+                padding-bottom: 10px;
+                overflow-x: auto;
+                width: 100%;
+            }
+            .tab-btn {
+                white-space: nowrap;
+            }
+            .navigation-bar {
+                padding: 0 20px;
+            }
+            .progress-indicator-container {
+                display: none;
+            }
+        }
+
+        /* ==========================================================================
+           11. OPTIMIZACIÓN PARA IMPRESIÓN / EXPORTACIÓN A PDF
+           ========================================================================== */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                overflow: visible !important;
+                height: auto !important;
+                width: auto !important;
+            }
+            .presentation-wrapper {
+                height: auto !important;
+            }
+            header, .navigation-bar, .sidebar-index, .sidebar-overlay, .bg-glow-container {
+                display: none !important;
+            }
+            .slides-container {
+                perspective: none !important;
+                overflow: visible !important;
+            }
+            .slide {
+                position: relative !important;
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: none !important;
+                page-break-after: always !important;
+                height: 100vh !important;
+                width: 100vw !important;
+                border: none !important;
+                padding: 40px !important;
+                background: white !important;
+                color: black !important;
+            }
+            .glass-card {
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+                color: black !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+            }
+            .slide-title, .cover-title {
+                background: none !important;
+                -webkit-text-fill-color: black !important;
+                color: black !important;
+            }
+            .modern-table th {
+                background: #e2e8f0 !important;
+                color: black !important;
+                border-bottom: 2px solid #cbd5e1 !important;
+            }
+            .modern-table td {
+                color: #334155 !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+            }
+            .dashboard-sidebar {
+                display: none !important;
+            }
+            .dashboard-container {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fondos con Resplandores Animados de Acentuación -->
+    <div class="bg-glow-container">
+        <div class="bg-glow-circle-1"></div>
+        <div class="bg-glow-circle-2"></div>
+    </div>
+
+    <div class="presentation-wrapper">
+        
+        <!-- HEADER SUPERIOR -->
+        <header>
+            <div class="header-logo" id="logo-trigger" style="cursor:pointer;" title="Abrir Índice de Contenido">
+                <span>⚡</span> CEBI INVESTIGACIÓN
+            </div>
+            <div class="header-title">
+                Impacto de la Falta de Sueño en el Rendimiento de Deportistas
+            </div>
+            <div class="header-controls">
+                <button class="btn-control" id="btn-index" title="Índice de Diapositivas">
+                    <span>☰</span> Índice
+                </button>
+                <button class="btn-control" id="btn-fullscreen" title="Pantalla Completa">
+                    <span>⛶</span> Pantalla Completa
+                </button>
+                <button class="btn-control" id="btn-print" title="Imprimir / Guardar como PDF">
+                    <span>🖨️</span> Exportar PDF
+                </button>
+            </div>
+        </header>
+
+        <!-- VISOR DE DIAPOSITIVAS (SLIDES) -->
+        <div class="slides-container" id="slides-viewport">
+
+            <!-- 1. PORTADA -->
+            <div class="slide slide-cover active" data-slide-index="1">
+                <div class="cover-content">
+                    <div class="cover-badge">Estudio de Caso Especializado</div>
+                    <h1 class="cover-title">
+                        Análisis del Impacto de la Falta de Sueño en el Rendimiento Integral de los Deportistas
+                    </h1>
+                    <div style="margin-bottom: 30px; font-size: 1.1rem; color: var(--text-muted); font-family: var(--font-body);">
+                        Selección Superior del Colegio Internacional CEBI
+                    </div>
+                    <div class="cover-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Estudiante Investigador</div>
+                            <div class="meta-value">José Alfredo Rodríguez Zúñiga</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Título de Obtención</div>
+                            <div class="meta-value">Bachiller en Ciencias</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Año Lectivo</div>
+                            <div class="meta-value">2025 - 2026</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Ubicación</div>
+                            <div class="meta-value">Ambato, Ecuador</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Imagen conceptual generada localmente -->
+                <div class="cover-visual" style="background-image: url('presentation_cover.png'); background-color: var(--bg-secondary);">
+                    <div class="visual-glow"></div>
+                </div>
+            </div>
+
+            <!-- 2. RESUMEN EJECUTIVO (MÉTRICAS) -->
+            <div class="slide" data-slide-index="2">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 1</span>
+                    <h2 class="slide-title">Resumen Ejecutivo</h2>
+                </div>
+                <div class="slide-body">
+                    <div style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 10px;">
+                        El estudio analiza la privación del sueño en el rendimiento físico, cognitivo y académico de <strong>28 atletas</strong> de bachillerato del Colegio CEBI, revelando una discrepancia alarmante entre el conocimiento de su importancia y los hábitos reales de descanso.
+                    </div>
+                    <div class="metric-container">
+                        <div class="metric-card">
+                            <span class="card-icon">⚠️</span>
+                            <div class="metric-value">86%</div>
+                            <div class="metric-label">Déficit de Sueño Crónico</div>
+                            <p class="metric-desc">Estudiantes-deportistas que duermen menos de las horas recomendadas para su edad.</p>
+                        </div>
+                        <div class="metric-card">
+                            <span class="card-icon">⚡</span>
+                            <div class="metric-value">82%</div>
+                            <div class="metric-label">Fatiga & Pérdida de Foco</div>
+                            <p class="metric-desc">Atletas que experimentan fatiga y reducción drástica de concentración en el entrenamiento.</p>
+                        </div>
+                        <div class="metric-card">
+                            <span class="card-icon">🤕</span>
+                            <div class="metric-value">64%</div>
+                            <div class="metric-label">Lesiones por Cansancio</div>
+                            <p class="metric-desc">Deportistas que han sufrido lesiones físicas directamente atribuidas al cansancio acumulado.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. INTRODUCCIÓN Y CONTEXTO -->
+            <div class="slide" data-slide-index="3">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 2</span>
+                    <h2 class="slide-title">Introducción y Contexto</h2>
+                </div>
+                <div class="slide-body grid-2-cols">
+                    <div class="glass-card">
+                        <span class="card-icon">🌙</span>
+                        <h3 class="card-title">Pilar del Rendimiento</h3>
+                        <p class="card-text">
+                            El sueño es un proceso biológico vital donde ocurren la <strong>recuperación muscular, la regulación hormonal y la consolidación de aprendizajes motores</strong> adquiridos en el día.
+                            <br><br>
+                            A nivel mundial, un 45% de la población presenta trastornos del sueño. En <strong>deportistas adolescentes</strong>, esta cifra se dispara a rangos de entre el <strong>30% y 59%</strong>, agravado por el uso de tecnologías nocturnas.
+                        </p>
+                    </div>
+                    <div class="glass-card highlight">
+                        <span class="card-icon">⚖️</span>
+                        <h3 class="card-title">La Dualidad de Carga</h3>
+                        <p class="card-text">
+                            Los estudiantes-deportistas del bachillerato del Colegio CEBI enfrentan una doble demanda extrema:
+                        </p>
+                        <ul class="modern-list green" style="margin-top: 15px;">
+                            <li><strong>Exigencias Académicas:</strong> Cargas de deberes, evaluaciones y horarios escolares matutinos.</li>
+                            <li><strong>Exigencias Físicas:</strong> Sesiones de entrenamiento de alto impacto competitivas por la tarde/noche.</li>
+                            <li><strong>Resultado:</strong> Compresión drástica del descanso nocturno, exponiéndolos a riesgos biológicos y deportivos severos.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. EL PROBLEMA Y DELIMITACIÓN -->
+            <div class="slide" data-slide-index="4">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 3</span>
+                    <h2 class="slide-title">El Problema y Demografía</h2>
+                </div>
+                <div class="slide-body grid-2-cols">
+                    <div class="glass-card">
+                        <span class="card-icon">🚨</span>
+                        <h3 class="card-title">Definición del Problema</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            Los atletas del CEBI asisten a clases con descanso insuficiente, entrenan bajo condiciones de fatiga crónica y no reciben educación formal sobre higiene del sueño. La falta de datos locales e institucionales impide la adopción de medidas preventivas y correctivas específicas.
+                            <br><br>
+                            <strong>Déficit Invisible:</strong> Con frecuencia los atletas no reconocen el déficit que padecen, asumiendo la fatiga crónica y la somnolencia como estados "normales" de su rutina diaria.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">📊</span>
+                        <h3 class="card-title">Muestra del Estudio (N = 28)</h3>
+                        <p class="card-text" style="margin-bottom: 15px; font-size:0.9rem;">
+                            Estudio centrado en deportistas de la Selección Superior de Bachillerato del Colegio Internacional CEBI (Año Lectivo 2025-2026).
+                        </p>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                                <div style="font-size: 1.4rem; font-weight:800; color: var(--accent-cyan);">50%</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Fútbol (14)</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                                <div style="font-size: 1.4rem; font-weight:800; color: var(--accent-cyan);">32%</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Atletismo (9)</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                                <div style="font-size: 1.4rem; font-weight:800; color: var(--accent-cyan);">18%</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Básquet (5)</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted); display:flex; justify-content:space-between;">
+                            <span><strong>Género:</strong> 68% Hombres | 32% Mujeres</span>
+                            <span><strong>Edad Media:</strong> 16.2 años</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. JUSTIFICACIÓN -->
+            <div class="slide" data-slide-index="5">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 4</span>
+                    <h2 class="slide-title">Justificación del Estudio</h2>
+                </div>
+                <div class="slide-body grid-2-cols">
+                    <div class="glass-card">
+                        <span class="card-icon">🔬</span>
+                        <h3 class="card-title">Pertinencia Científica y Académica</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            En el Ecuador la relación entre sueño y desempeño deportivo en bachillerato ha sido <strong>escasamente investigada</strong>. Este estudio de caso aporta un diagnóstico real local sustentado en literatura científica internacional para visibilizar el problema.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">🏫</span>
+                        <h3 class="card-title">Pertinencia Institucional (CEBI)</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            Al promover activamente el deporte, el Colegio CEBI asume la responsabilidad de velar por el <strong>bienestar integral</strong> de sus atletas. Contar con evidencia real permite formular políticas internas orientadas a balancear deberes y descanso.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">🧠</span>
+                        <h3 class="card-title">Relevancia Intelectual y Física</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            La privación de sueño deteriora simultáneamente la velocidad de procesamiento, la atención y la toma de decisiones rápidas en la cancha, así como el rendimiento, la concentración y la motivación dentro del aula.
+                        </p>
+                    </div>
+                    <div class="glass-card highlight">
+                        <span class="card-icon">🛡️</span>
+                        <h3 class="card-title">Impacto Preventivo y Social</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            Establecer hábitos de sueño saludables en la adolescencia reduce el riesgo a largo plazo de desarrollar patologías metabólicas, problemas cardiovasculares, depresión y ansiedad en la vida adulta.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. OBJETIVOS -->
+            <div class="slide" data-slide-index="6">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 5</span>
+                    <h2 class="slide-title">Objetivos del Proyecto</h2>
+                </div>
+                <div class="slide-body grid-2-cols">
+                    <div class="glass-card highlight" style="justify-content: center; border-left: 5px solid var(--accent-cyan);">
+                        <span class="card-icon" style="font-size: 3rem;">🎯</span>
+                        <h3 class="card-title" style="font-size:1.5rem;">Objetivo General</h3>
+                        <p class="card-text" style="font-size:1.05rem; line-height: 1.7; margin-top: 10px;">
+                            <strong>Analizar el impacto de la privación del sueño en el rendimiento físico, cognitivo y académico de los deportistas de la selección superior del Colegio Internacional CEBI</strong>, con el fin de proponer recomendaciones institucionales para optimizar sus hábitos de descanso y bienestar integral.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <h3 class="card-title">Objetivos Específicos</h3>
+                        <ul class="modern-list" style="font-size: 0.85rem;">
+                            <li><strong>Identificar:</strong> Evaluar los patrones y cantidad de horas reales de sueño nocturno de los deportistas.</li>
+                            <li><strong>Determinar:</strong> Identificar los factores causales principales del déficit (cargas académicas, uso de pantallas, entrenamientos).</li>
+                            <li><strong>Describir:</strong> Detallar los efectos percibidos por los atletas sobre su fuerza, concentración y estado de alerta.</li>
+                            <li><strong>Contrastar:</strong> Comparar los datos recolectados con hallazgos e investigaciones especializadas previas.</li>
+                            <li><strong>Proponer:</strong> Diseñar un plan de acción preventivo con recomendaciones prácticas y aplicables para toda la comunidad CEBI.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. MARCO CONCEPTUAL: FISIOLOGÍA DEL SUEÑO -->
+            <div class="slide" data-slide-index="7">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 6 - Fundamentos</span>
+                    <h2 class="slide-title">Fisiología del Sueño en Adolescentes Deportistas</h2>
+                </div>
+                <div class="slide-body grid-3-cols">
+                    <div class="glass-card">
+                        <span class="card-icon">🕒</span>
+                        <h3 class="card-title">Horas Necesarias</h3>
+                        <p class="card-text" style="font-size: 0.85rem;">
+                            La literatura establece diferencias clave en los requerimientos biológicos:
+                            <br><br>
+                            • <strong>Adolescentes:</strong> 8 a 10 horas de sueño nocturno para un óptimo desarrollo biológico y cerebral.
+                            <br><br>
+                            • <strong>Deportistas:</strong> 9 a 10 horas por noche, requerido para compensar el alto gasto energético y facilitar la reconstrucción micro-muscular.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">🔋</span>
+                        <h3 class="card-title">Fases Profundas</h3>
+                        <p class="card-text" style="font-size: 0.85rem;">
+                            Durante el <strong>sueño de ondas lentas (profundo NREM)</strong>, se activan los mecanismos corporales críticos:
+                            <br><br>
+                            • Liberación masiva de la <strong>Hormona del Crecimiento (GH)</strong>.
+                            <br><br>
+                            • Regeneración de fibras musculares y tejidos articulares dañados.
+                            <br><br>
+                            • Restauración de depósitos de glucógeno muscular.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">💭</span>
+                        <h3 class="card-title">Fase REM</h3>
+                        <p class="card-text" style="font-size: 0.85rem;">
+                            La fase del sueño de movimientos oculares rápidos (REM) es fundamental para las funciones cognitivas superiores:
+                            <br><br>
+                            • <strong>Consolidación Motora:</strong> Fijación en la memoria a largo plazo de las tácticas y destrezas aprendidas en los entrenamientos.
+                            <br><br>
+                            • Estabilización de la salud emocional y procesamiento de estrés precompetitivo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. PROBLEMAS DEL SUEÑO Y SIENDA (TABLA) -->
+            <div class="slide" data-slide-index="8">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 6 - Teoría</span>
+                    <h2 class="slide-title">Problemáticas de Sueño y Rendimiento</h2>
+                </div>
+                <div class="slide-body" style="grid-template-rows: auto 1fr; gap: 15px;">
+                    <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                        A continuación se sistematizan las principales afecciones ligadas al sueño descritas por la literatura científica y su impacto directo en el deportista:
+                    </div>
+                    
+                    <div class="table-wrapper">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Afección</th>
+                                    <th>Descripción Científica</th>
+                                    <th>Impacto Deportivo Directo</th>
+                                    <th>Gravedad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Privación del Sueño</strong></td>
+                                    <td>Reducción de horas por debajo de las 9-10h sugeridas.</td>
+                                    <td>Menor velocidad en sprints, pérdida de resistencia y precisión técnica.</td>
+                                    <td><span class="badge-table">Crítica</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fatiga Fisiológica</strong></td>
+                                    <td>Desbalance progresivo entre vigilia y descanso físico.</td>
+                                    <td>Mayor susceptibilidad a microlesiones y agotamiento prematuro.</td>
+                                    <td><span class="badge-table">Alta</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Deterioro Cognitivo</strong></td>
+                                    <td>Alteración de la atención selectiva y reflejos neurocognitivos.</td>
+                                    <td>Respuestas de reacción lentas, errores en tácticas de juego.</td>
+                                    <td><span class="badge-table">Alta</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mala Calidad Subjetiva</strong></td>
+                                    <td>Percepción de sueño no reparador por estrés nocturno.</td>
+                                    <td>Alteraciones del estado de ánimo, fatiga diurna crónica.</td>
+                                    <td><span class="badge-table cyan">Moderada</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="background:rgba(0, 255, 135, 0.05); border:1px solid rgba(0,255,135,0.2); border-radius:8px; padding:10px 15px; font-size:0.85rem; color: var(--text-muted); display:flex; align-items:center; gap:10px;">
+                        <span>💡</span>
+                        <span><strong>Estrategia de la Siesta Breve:</strong> Una siesta de <strong>20 a 30 minutos</strong> a media tarde mejora significativamente el rendimiento atencional, el alerta mental y la velocidad psicomotora sin interferir con el ciclo circadiano del sueño nocturno.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. MARCO METODOLÓGICO -->
+            <div class="slide" data-slide-index="9">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 7</span>
+                    <h2 class="slide-title">Diseño y Marco Metodológico</h2>
+                </div>
+                <div class="slide-body grid-3-cols">
+                    <div class="glass-card">
+                        <span class="card-icon">📈</span>
+                        <h3 class="card-title">Enfoque y Alcance</h3>
+                        <p class="card-text" style="font-size:0.85rem;">
+                            • <strong>Enfoque:</strong> Cuantitativo-descriptivo con sólido apoyo documental.
+                            <br><br>
+                            • <strong>Alcance:</strong> Descriptivo. Busca caracterizar de forma rigurosa la cantidad de sueño y sus efectos observables directos en los deportistas, correlacionando datos estadísticos de autoevaluación con la teoría fisiológica.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">📋</span>
+                        <h3 class="card-title">Instrumento</h3>
+                        <p class="card-text" style="font-size:0.85rem;">
+                            • <strong>Técnica:</strong> Encuesta digital estructurada.
+                            <br><br>
+                            • <strong>Instrumento:</strong> Cuestionario estandarizado de <strong>10 ítems</strong> con opciones categóricas y ordinales.
+                            <br><br>
+                            • <strong>Canal:</strong> Distribuido en la plataforma Google Forms y recolectado durante 3 días consecutivos a través de canales institucionales.
+                        </p>
+                    </div>
+                    <div class="glass-card highlight">
+                        <span class="card-icon">🔬</span>
+                        <h3 class="card-title">Limitaciones del Estudio</h3>
+                        <p class="card-text" style="font-size:0.85rem;">
+                            • <strong>Autoinforme:</strong> Los datos de horas de descanso y lesiones son declarados por los estudiantes y sujetos a su percepción subjetiva.
+                            <br><br>
+                            • <strong>Demografía local:</strong> Muestra focalizada de 28 atletas del Colegio CEBI, limitando la generalización.
+                            <br><br>
+                            • Sin validación médica u observaciones de laboratorio polisomnográficas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. DASHBOARD INTERACTIVO DE RESULTADOS (DIAPOSITIVA ESTRELLA) -->
+            <div class="slide" data-slide-index="10">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 8 - Dashboard</span>
+                    <h2 class="slide-title">Panel de Control: Resultados de la Encuesta</h2>
+                </div>
+                <div class="slide-body" style="overflow: hidden;">
+                    <div class="dashboard-container">
+                        
+                        <!-- Panel de Selección Lateral de Preguntas -->
+                        <div class="dashboard-sidebar" id="sidebar-tabs">
+                            <button class="tab-btn active" data-tab="0">
+                                <span class="tab-num">P1</span>
+                                <div>Horas promedio de sueño nocturno</div>
+                            </button>
+                            <button class="tab-btn" data-tab="1">
+                                <span class="tab-num">P2</span>
+                                <div>¿Su descanso es suficiente?</div>
+                            </button>
+                            <button class="tab-btn" data-tab="2">
+                                <span class="tab-num">P3</span>
+                                <div>Frecuencia de fatiga percibida</div>
+                            </button>
+                            <button class="tab-btn" data-tab="3">
+                                <span class="tab-num">P4</span>
+                                <div>Impacto percibido en rendimiento físico</div>
+                            </button>
+                            <button class="tab-btn" data-tab="4">
+                                <span class="tab-num">P5</span>
+                                <div>Falta de sueño e influencia en foco</div>
+                            </button>
+                            <button class="tab-btn" data-tab="5">
+                                <span class="tab-num">P6</span>
+                                <div>Descanso previo a competencias</div>
+                            </button>
+                            <button class="tab-btn" data-tab="6">
+                                <span class="tab-num">P7</span>
+                                <div>Lesiones atribuidas a fatiga</div>
+                            </button>
+                            <button class="tab-btn" data-tab="7">
+                                <span class="tab-num">P8</span>
+                                <div>Uso de celulares antes de dormir</div>
+                            </button>
+                            <button class="tab-btn" data-tab="8">
+                                <span class="tab-num">P9</span>
+                                <div>Beneficio percibido de mejorar hábito</div>
+                            </button>
+                            <button class="tab-btn" data-tab="9">
+                                <span class="tab-num">P10</span>
+                                <div>Importancia atribuida al sueño</div>
+                            </button>
+                        </div>
+                        
+                        <!-- Panel de Gráfico y Explicación -->
+                        <div class="dashboard-view">
+                            <div class="chart-card">
+                                <div class="chart-container">
+                                    <canvas id="dashboard-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-info">
+                                <h4 class="chart-info-title" id="info-question-title">Pregunta 1: Horas de sueño promedio</h4>
+                                <p class="chart-info-desc" id="info-question-desc">
+                                    El 86% de los deportistas (24 estudiantes) no alcanza el umbral de descanso nocturno de 7 horas diarias. 
+                                    Este déficit severo es crítico, considerando que requieren entre 9 y 10 horas debido a sus rutinas deportivas escolares.
+                                </p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11. TABLA GLOBAL DE RESULTADOS -->
+            <div class="slide" data-slide-index="11">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 8 - Datos</span>
+                    <h2 class="slide-title">Métricas Estadísticas Globales (N = 28)</h2>
+                </div>
+                <div class="slide-body" style="grid-template-rows: auto 1fr; gap: 15px;">
+                    <div style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                        Se consolida a continuación el conjunto de hallazgos clave con sus respectivas ponderaciones estadísticas para la muestra de deportistas del CEBI:
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Variable Evaluada</th>
+                                    <th>Métrica / Porcentaje Detectado</th>
+                                    <th>Hallazgo Clave e Interpretación</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Déficit de Descanso</strong></td>
+                                    <td><strong style="color:var(--accent-cyan);">86% duerme &lt; 7 horas</strong></td>
+                                    <td>Altamente deficitario en relación con la recomendación para deportistas.</td>
+                                    <td><span class="badge-table">Crítico</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Autoevaluación de Insuficiencia</strong></td>
+                                    <td><strong style="color:var(--accent-cyan);">96% califica sueño insuficiente</strong></td>
+                                    <td>Los estudiantes reconocen estar rindiendo con altos niveles de cansancio.</td>
+                                    <td><span class="badge-table">Crítico</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Aparición de Fatiga</strong></td>
+                                    <td><strong style="color:var(--accent-cyan);">82% la experimenta siempre o a veces</strong></td>
+                                    <td>Fatiga fisiológica acumulada recurrente en las prácticas vespertinas.</td>
+                                    <td><span class="badge-table">Grave</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lesiones Relacionadas</strong></td>
+                                    <td><strong style="color:var(--accent-cyan);">64% asocia fatiga y lesión</strong></td>
+                                    <td>Percepción sólida de mayor propensión a sufrir lesiones por cansancio.</td>
+                                    <td><span class="badge-table">Alerta</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Uso de Pantallas Nocturnas</strong></td>
+                                    <td><strong style="color:var(--accent-cyan);">86% usa celular antes de dormir</strong></td>
+                                    <td>Principal factor externo de disrupción de la secreción de melatonina.</td>
+                                    <td><span class="badge-table">Grave</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Disposición al Cambio</strong></td>
+                                    <td><strong style="color:var(--accent-green);">89% cree que mejoraría rendimiento</strong></td>
+                                    <td>Alta receptividad para la implementación de talleres preventivos.</td>
+                                    <td><span class="badge-table green">Favorable</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 12. ANÁLISIS DE RESULTADOS: PATRONES Y EFECTOS -->
+            <div class="slide" data-slide-index="12">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 9</span>
+                    <h2 class="slide-title">Análisis de Resultados y Discusión</h2>
+                </div>
+                <div class="slide-body grid-2-cols">
+                    <div class="glass-card">
+                        <span class="card-icon">🧠</span>
+                        <h3 class="card-title">Patrones y Causas Identificados</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            1. <strong>La Luz Azul Disruptiva (86%):</strong> El uso generalizado de smartphones antes de dormir inhibe drásticamente la síntesis de la hormona <strong>melatonina</strong>, retrasando el inicio del sueño profundo y fragmentando su continuidad.
+                            <br><br>
+                            2. <strong>Ansiedad Competitiva (75%):</strong> Un alto porcentaje duerme menos en la víspera de competencias importantes por falta de control emocional, afectando su desempeño justamente cuando más necesitan descanso.
+                        </p>
+                    </div>
+                    <div class="glass-card highlight">
+                        <span class="card-icon">🏃‍♂️</span>
+                        <h3 class="card-title">Efectos en la Cancha y el Aula</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            • <strong>Rendimiento Físico:</strong> El 82% padece fatiga recurrente. La privación de sueño deteriora la recuperación de glucógeno y provoca sobrecarga neuromuscular, derivando en un <strong>64% de propensión percibida a lesiones</strong>.
+                            <br><br>
+                            • <strong>Capacidad Cognitiva:</strong> El 82% declara que afecta su concentración. Esto debilita la toma de decisiones veloces, la retención táctica deportiva y aumenta la somnolencia e inatención en clases.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 13. CONCLUSIONES -->
+            <div class="slide" data-slide-index="13">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 10</span>
+                    <h2 class="slide-title">Conclusiones del Estudio</h2>
+                </div>
+                <div class="slide-body grid-2-cols">
+                    <div class="glass-card" style="border-left: 5px solid var(--accent-pink);">
+                        <span class="card-icon">📌</span>
+                        <h3 class="card-title">Déficit Crónico Confirmado</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            La investigación corrobora la existencia de un <strong>déficit severo y generalizado de sueño (86% de la muestra)</strong>, situando a los atletas del Colegio CEBI en un estado de alta vulnerabilidad fisiológica en comparación con otros estudios latinoamericanos de referencia.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">⚡</span>
+                        <h3 class="card-title">Efecto Dual Multi-causal</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            La fatiga crónica afecta el desempeño en el aula y en los entrenamientos. Las principales causas son la <strong>sobrecarga tecnológica nocturna (86%)</strong>, la <strong>ansiedad precompetitiva (75%)</strong> y los horarios de entrenamiento incompatibles con las tareas escolares.
+                        </p>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">⚠️</span>
+                        <h3 class="card-title">Impacto Crítico de Lesiones</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            La asociación entre fatiga y propensión a lesiones físicas es contundente (<strong>64% de reporte directo</strong>), debido a que la privación de sueño disminuye los reflejos, la capacidad propioceptiva y retrasa la regeneración muscular celular.
+                        </p>
+                    </div>
+                    <div class="glass-card highlight">
+                        <span class="card-icon">⚖️</span>
+                        <h3 class="card-title">La Brecha Preventiva</h3>
+                        <p class="card-text" style="font-size:0.9rem;">
+                            Existe una alarmante brecha entre el conocimiento declarativo (el 82% sabe que el sueño es muy importante) y las prácticas cotidianas de descanso, lo que evidencia la <strong>necesidad urgente de una intervención educativa de higiene del sueño</strong> por parte de la institución.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 14. RECOMENDACIONES -->
+            <div class="slide" data-slide-index="14">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Capítulo 11</span>
+                    <h2 class="slide-title">Recomendaciones para la Comunidad</h2>
+                </div>
+                <div class="slide-body grid-2-cols">
+                    <div class="glass-card">
+                        <span class="card-icon">🏛️</span>
+                        <h3 class="card-title">Para la Institución (Colegio CEBI)</h3>
+                        <ul class="modern-list" style="font-size: 0.85rem;">
+                            <li><strong>Talleres de Higiene de Sueño:</strong> Coordinados por el DECE para enseñar el valor fisiológico del descanso regular.</li>
+                            <li><strong>Seguimiento Semestral:</strong> Implementar encuestas periódicas de descanso para prevenir el síndrome de sobreentrenamiento.</li>
+                            <li><strong>Flexibilidad Académica:</strong> Promover el balance entre calendarios de exámenes y competiciones oficiales importantes.</li>
+                        </ul>
+                    </div>
+                    <div class="glass-card">
+                        <span class="card-icon">👟</span>
+                        <h3 class="card-title">Para Entrenadores y Familias</h3>
+                        <ul class="modern-list" style="font-size: 0.85rem;">
+                            <li><strong>Ajuste de Horarios:</strong> Diseñar entrenamientos que terminen temprano para permitir la cena y el descanso inmediato.</li>
+                            <li><strong>Pactos de Desconexión:</strong> Fomentar en casa apagar pantallas electrónicas <strong>60 a 90 minutos</strong> antes de ir a dormir.</li>
+                            <li><strong>Monitoreo de Carga:</strong> Reducir la intensidad del entrenamiento físico si se detecta déficit severo de sueño o fatiga evidente.</li>
+                        </ul>
+                    </div>
+                    <div class="glass-card highlight" style="grid-column: span 2;">
+                        <span class="card-icon" style="float:left; margin-right:15px; margin-bottom:0;">💡</span>
+                        <h3 class="card-title">Para Estudiantes: La Regla de Oro</h3>
+                        <p class="card-text" style="font-size: 0.88rem;">
+                            Establecer horarios fijos para dormir y despertar (incluso fines de semana). En días de déficit nocturno ineludible, implementar <strong>siestas estratégicas de 20 a 30 minutos</strong> a media tarde para revitalizar la energía cognitiva y física sin alterar el ciclo de sueño principal.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 15. REFERENCIAS Y CIERRE -->
+            <div class="slide" data-slide-index="15">
+                <div class="slide-header">
+                    <span class="slide-subtitle">Cierre</span>
+                    <h2 class="slide-title">Referencias y Agradecimiento</h2>
+                </div>
+                <div class="slide-body grid-2-cols" style="align-items: center;">
+                    <div class="glass-card">
+                        <span class="card-icon">📚</span>
+                        <h3 class="card-title">Referencias Bibliográficas (Normas APA)</h3>
+                        <div style="font-size: 0.78rem; line-height: 1.4; color: var(--text-muted); display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; padding-right:5px;">
+                            <p>• <strong>Kong, Y. et al. (2025).</strong> Efectos de la privación del sueño en el rendimiento deportivo y percepción del esfuerzo en atletas. Frontiers in Physiology.</p>
+                            <p>• <strong>Mata-Ordóñez, F. et al. (2018).</strong> Importancia del sueño en el rendimiento y la salud del deportista. Revista de Educación Motriz.</p>
+                            <p>• <strong>Rivera Cisneros, A. E. et al. (2024).</strong> Trastornos del sueño en deportistas, factores y consecuencias asociados. Emergentes – Revista Científica.</p>
+                            <p>• <strong>Simpson, N. S. et al. (2017).</strong> Optimizing sleep to maximize performance: implications for elite athletes. Scandinavian Journal of Medicine & Science in Sports.</p>
+                            <p>• <strong>Taylor, L. et al. (2022).</strong> The importance of monitoring sleep within adolescent athletes: health considerations. Frontiers in Physiology.</p>
+                        </div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
+                        <div style="font-size: 4rem;">🎓</div>
+                        <h2 style="font-family: var(--font-display); font-size: 2.2rem; font-weight:900; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            ¡Muchas Gracias!
+                        </h2>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); max-width:80%;">
+                            "Un descanso inteligente es la base de un rendimiento sobresaliente."
+                        </p>
+                        <div style="margin-top: 10px; font-size: 0.8rem; border-top:1px solid var(--glass-border); width:80%; padding-top:15px; color: var(--text-muted);">
+                            <strong>José Alfredo Rodríguez Zúñiga</strong><br>Colegio Internacional CEBI
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CONTROLES INFERIORES -->
+        <div class="navigation-bar">
+            
+            <div class="progress-indicator-container">
+                <div class="progress-text">
+                    <span>Avance de la Presentación</span>
+                    <span id="progress-percentage">Diapositiva 1 de 15 (7%)</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn-nav" id="btn-prev" disabled>
+                    <span>◀</span> Anterior
+                </button>
+                <button class="btn-nav" id="btn-next">
+                    Siguiente <span>▶</span>
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MENÚ ÍNDICE LATERAL -->
+    <div class="sidebar-overlay" id="index-overlay"></div>
+    <div class="sidebar-index" id="index-sidebar">
+        <div class="index-title">
+            <span>📚 Índice General</span>
+            <button class="btn-control" id="btn-index-close" style="padding: 5px 8px;">✕</button>
+        </div>
+        <ul class="index-list">
+            <li class="index-item active" data-target="1"><span class="index-badge">1</span> Portada Académica</li>
+            <li class="index-item" data-target="2"><span class="index-badge">2</span> Resumen Ejecutivo</li>
+            <li class="index-item" data-target="3"><span class="index-badge">3</span> Introducción y Contexto</li>
+            <li class="index-item" data-target="4"><span class="index-badge">4</span> Planteamiento del Problema</li>
+            <li class="index-item" data-target="5"><span class="index-badge">5</span> Justificación del Proyecto</li>
+            <li class="index-item" data-target="6"><span class="index-badge">6</span> Objetivos de Investigación</li>
+            <li class="index-item" data-target="7"><span class="index-badge">7</span> Fisiología y Fases del Sueño</li>
+            <li class="index-item" data-target="8"><span class="index-badge">8</span> Problemáticas e Impactos</li>
+            <li class="index-item" data-target="9"><span class="index-badge">9</span> Metodología e Instrumento</li>
+            <li class="index-item" data-target="10"><span class="index-badge">10</span> Dashboard de Resultados</li>
+            <li class="index-item" data-target="11"><span class="index-badge">11</span> Métricas Consolidadas</li>
+            <li class="index-item" data-target="12"><span class="index-badge">12</span> Análisis y Discusión</li>
+            <li class="index-item" data-target="13"><span class="index-badge">13</span> Conclusiones de Investigación</li>
+            <li class="index-item" data-target="14"><span class="index-badge">14</span> Recomendaciones de Acción</li>
+            <li class="index-item" data-target="15"><span class="index-badge">15</span> Cierre y Referencias</li>
+        </ul>
+    </div>
+
+    <!-- ==========================================================================
+       LÓGICA JAVASCRIPT: NAVEGACIÓN Y RENDERIZADO DE GRÁFICOS DILIGENTES
+       ========================================================================== -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // ----------------------------------------------------
+            // A. ESTADO GLOBAL DE LA APLICACIÓN
+            // ----------------------------------------------------
+            let currentSlide = 1;
+            const totalSlides = 15;
+            const slides = document.querySelectorAll(".slide");
+            
+            // Elementos DOM
+            const btnPrev = document.getElementById("btn-prev");
+            const btnNext = document.getElementById("btn-next");
+            const progressPercentage = document.getElementById("progress-percentage");
+            const progressFill = document.getElementById("progress-fill");
+            
+            const btnFullscreen = document.getElementById("btn-fullscreen");
+            const btnPrint = document.getElementById("btn-print");
+            const btnIndex = document.getElementById("btn-index");
+            const btnIndexClose = document.getElementById("btn-index-close");
+            const indexSidebar = document.getElementById("index-sidebar");
+            const indexOverlay = document.getElementById("index-overlay");
+            const indexItems = document.querySelectorAll(".index-item");
+            const logoTrigger = document.getElementById("logo-trigger");
+
+            // Datos de la Encuesta para los Gráficos del Dashboard (N=28)
+            const surveyData = [
+                {
+                    question: "Pregunta 1. ¿Cuántas horas duerme en promedio cada noche?",
+                    labels: ["Menos de 5 horas", "Entre 5 y 6 horas", "Entre 7 y 8 horas", "Más de 8 horas"],
+                    data: [12, 12, 3, 1], // Total = 28
+                    percentages: ["43%", "43%", "11%", "4%"],
+                    desc: "El 86% de los deportistas (24 estudiantes) no alcanza el umbral de descanso nocturno mínimo de 7 horas diarias. Únicamente el 4% (1 estudiante) duerme las horas óptimas, evidenciando un déficit severo en la muestra estudiada.",
+                    type: "bar",
+                    colors: ["#ff007f", "#ff007f", "#00f0ff", "#00ff87"]
+                },
+                {
+                    question: "Pregunta 2. ¿Considera que su descanso nocturno es suficiente?",
+                    labels: ["No", "A veces", "Sí"],
+                    data: [17, 10, 1],
+                    percentages: ["61%", "36%", "3%"],
+                    desc: "El 96% de los deportistas califica su descanso como insuficiente en alguna medida (No o A veces). Existe una conciencia extendida de que se entrena y se estudia con una carga de cansancio no repuesta.",
+                    type: "doughnut",
+                    colors: ["#ff007f", "#00f0ff", "#00ff87"]
+                },
+                {
+                    question: "Pregunta 3. ¿Con qué frecuencia se siente fatigado durante los entrenamientos?",
+                    labels: ["Siempre", "A veces", "Rara vez", "Nunca"],
+                    data: [14, 9, 2, 3],
+                    percentages: ["50%", "32%", "7%", "11%"],
+                    desc: "El 82% de la muestra (23 estudiantes) experimenta fatiga física recurrente durante sus prácticas (siempre o a veces). Este es un factor de fatiga neuromuscular severo.",
+                    type: "pie",
+                    colors: ["#ff007f", "#ff8000", "#00f0ff", "#00ff87"]
+                },
+                {
+                    question: "Pregunta 4. ¿La falta de sueño afecta su rendimiento físico?",
+                    labels: ["Sí", "No estoy seguro/a", "No"],
+                    data: [12, 12, 4],
+                    percentages: ["43%", "43%", "14%"],
+                    desc: "Aunque el 43% reconoce el impacto, un 43% duda sobre la conexión directa. Esto justifica plenamente la necesidad de charlas de higiene de sueño para visibilizar la relación científica.",
+                    type: "bar",
+                    colors: ["#ff007f", "#00f0ff", "#00ff87"]
+                },
+                {
+                    question: "Pregunta 5. ¿La falta de sueño influye en su concentración?",
+                    labels: ["Sí, mucho", "Sí, un poco", "No influye"],
+                    data: [14, 9, 5],
+                    percentages: ["50%", "32%", "18%"],
+                    desc: "El 82% reconoce afectación atencional. En disciplinas practicadas en el CEBI como fútbol y básquet, la velocidad atencional táctica es crucial para el desempeño y toma de decisiones.",
+                    type: "doughnut",
+                    colors: ["#ff007f", "#00f0ff", "#00ff87"]
+                },
+                {
+                    question: "Pregunta 6. ¿Duerme menos de lo recomendado antes de competir?",
+                    labels: ["Siempre", "A veces", "Rara vez", "Nunca"],
+                    data: [12, 9, 2, 5],
+                    percentages: ["43%", "32%", "7%", "18%"],
+                    desc: "El 75% ve mermadas sus horas de descanso justamente en la víspera competitiva, debido en gran parte a la ansiedad precompetitiva o falta de rutinas estructuradas.",
+                    type: "pie",
+                    colors: ["#ff007f", "#ff8000", "#00f0ff", "#00ff87"]
+                },
+                {
+                    question: "Pregunta 7. ¿Ha sufrido lesiones relacionadas con el cansancio?",
+                    labels: ["Sí (Lesión)", "No (Sin Lesión)"],
+                    data: [18, 10],
+                    percentages: ["64%", "36%"],
+                    desc: "Un preocupante 64% asocia fatiga acumulada con sus lesiones. La falta de sueño incrementa errores en propiocepción, debilita la estabilidad muscular y retarda reflejos protectores.",
+                    type: "doughnut",
+                    colors: ["#ff007f", "#00ff87"]
+                },
+                {
+                    question: "Pregunta 8. ¿Utiliza dispositivos electrónicos antes de dormir?",
+                    labels: ["A veces", "Siempre", "Nunca"],
+                    data: [14, 10, 4],
+                    percentages: ["50%", "36%", "14%"],
+                    desc: "El 86% usa pantallas en cama de forma cotidiana. La luz azul de 460nm emitida por celulares suprime la melatonina en el cerebro, dificultando el sueño reparador.",
+                    type: "bar",
+                    colors: ["#00f0ff", "#ff007f", "#00ff87"]
+                },
+                {
+                    question: "Pregunta 9. ¿Mejorar su descanso aumentaría su rendimiento?",
+                    labels: ["Sí", "Tal vez", "No"],
+                    data: [13, 12, 3],
+                    percentages: ["46%", "43%", "11%"],
+                    desc: "El 89% (25 deportistas) se muestra receptivo al cambio y visualiza el valor añadido de optimizar su sueño. Es un escenario excelente para intervenciones institucionales.",
+                    type: "pie",
+                    colors: ["#00ff87", "#00f0ff", "#ff007f"]
+                },
+                {
+                    question: "Pregunta 10. ¿Qué tan importante cree que es el sueño?",
+                    labels: ["Muy importante", "Importante", "Poco importante", "Nada importante"],
+                    data: [11, 12, 3, 2],
+                    percentages: ["39%", "43%", "11%", "7%"],
+                    desc: "El 82% lo valora teóricamente. La paradoja del estudio radica en esta brecha: aunque saben que el descanso importa, sus hábitos cotidianos reales son severamente deficientes.",
+                    type: "doughnut",
+                    colors: ["#00ff87", "#00f0ff", "#ff8000", "#ff007f"]
+                }
+            ];
+
+            let activeChartInstance = null;
+
+            // ----------------------------------------------------
+            // B. NAVEGACIÓN ENTRE DIAPOSITIVAS
+            // ----------------------------------------------------
+            const updateSlideView = () => {
+                slides.forEach(slide => {
+                    slide.classList.remove("active", "prev");
+                    const index = parseInt(slide.getAttribute("data-slide-index"));
+                    if (index === currentSlide) {
+                        slide.classList.add("active");
+                    } else if (index < currentSlide) {
+                        slide.classList.add("prev");
+                    }
+                });
+
+                // Botones Nav
+                btnPrev.disabled = currentSlide === 1;
+                btnNext.innerHTML = currentSlide === totalSlides ? "Finalizar <span>🏁</span>" : "Siguiente <span>▶</span>";
+
+                // Progreso
+                const pct = Math.round((currentSlide / totalSlides) * 100);
+                progressPercentage.innerHTML = `Diapositiva ${currentSlide} de ${totalSlides} (${pct}%)`;
+                progressFill.style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+                // Actualizar Índice lateral
+                indexItems.forEach(item => {
+                    const idx = parseInt(item.getAttribute("data-target"));
+                    if (idx === currentSlide) {
+                        item.classList.add("active");
+                        // Desplazar el elemento en vista dentro del sidebar si es necesario
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        item.classList.remove("active");
+                    }
+                });
+
+                // Si entramos en la diapositiva del Dashboard (Slide 10), inicializamos el gráfico por defecto
+                if (currentSlide === 10) {
+                    // Esperamos un instante corto para que se complete la transición de diapositiva
+                    setTimeout(() => {
+                        renderDashboardChart(0);
+                    }, 350);
+                }
+            };
+
+            const goToSlide = (idx) => {
+                if (idx >= 1 && idx <= totalSlides) {
+                    currentSlide = idx;
+                    updateSlideView();
+                } else if (idx > totalSlides) {
+                    // Clic en Finalizar en la última diapositiva
+                    alert("¡Gracias por visualizar la presentación académica del Colegio CEBI! Has completado todas las diapositivas.");
+                }
+            };
+
+            const nextSlide = () => goToSlide(currentSlide + 1);
+            const prevSlide = () => goToSlide(currentSlide - 1);
+
+            // Listeners de navegación básica
+            btnNext.addEventListener("click", nextSlide);
+            btnPrev.addEventListener("click", prevSlide);
+
+            // Navegación por Teclado
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "Space" || e.key === " ") {
+                    e.preventDefault();
+                    nextSlide();
+                } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                    e.preventDefault();
+                    prevSlide();
+                } else if (e.key === "Escape") {
+                    closeSidebar();
+                }
+            });
+
+            // Navegación por rueda de mouse (Throttled)
+            let lastScrollTime = 0;
+            const scrollThrottle = 1000; // ms
+            document.addEventListener("wheel", (e) => {
+                // Evitamos el scroll si estamos dentro de un contenedor con scroll propio como la tabla o la explicación de gráficos
+                const isInsideScrollable = e.target.closest('.modern-table') || 
+                                           e.target.closest('#sidebar-tabs') || 
+                                           e.target.closest('.index-list') || 
+                                           e.target.closest('.slide-body');
+                if (isInsideScrollable) return;
+
+                const now = Date.now();
+                if (now - lastScrollTime < scrollThrottle) return;
+                
+                if (e.deltaY > 30) {
+                    lastScrollTime = now;
+                    nextSlide();
+                } else if (e.deltaY < -30) {
+                    lastScrollTime = now;
+                    prevSlide();
+                }
+            });
+
+            // ----------------------------------------------------
+            // C. CONTROL DE INDEX SIDEBAR
+            // ----------------------------------------------------
+            const openSidebar = () => {
+                indexSidebar.classList.add("open");
+                indexOverlay.classList.add("active");
+            };
+
+            const closeSidebar = () => {
+                indexSidebar.classList.remove("open");
+                indexOverlay.classList.remove("active");
+            };
+
+            btnIndex.addEventListener("click", openSidebar);
+            logoTrigger.addEventListener("click", openSidebar);
+            btnIndexClose.addEventListener("click", closeSidebar);
+            indexOverlay.addEventListener("click", closeSidebar);
+
+            // Asignación de clics a elementos del índice
+            indexItems.forEach(item => {
+                item.addEventListener("click", () => {
+                    const targetIdx = parseInt(item.getAttribute("data-target"));
+                    goToSlide(targetIdx);
+                    closeSidebar();
+                });
+            });
+
+            // ----------------------------------------------------
+            // D. MODO PANTALLA COMPLETA
+            // ----------------------------------------------------
+            btnFullscreen.addEventListener("click", () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().then(() => {
+                        btnFullscreen.innerHTML = "<span>🗎</span> Salir Pantalla";
+                    }).catch(err => {
+                        console.error(`Error al intentar modo pantalla completa: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen().then(() => {
+                        btnFullscreen.innerHTML = "<span>⛶</span> Pantalla Completa";
+                    });
+                }
+            });
+
+            // ----------------------------------------------------
+            // E. MODO IMPRESIÓN / PDF
+            // ----------------------------------------------------
+            btnPrint.addEventListener("click", () => {
+                window.print();
+            });
+
+            // ----------------------------------------------------
+            // F. RENDERIZADO DE GRÁFICOS DINÁMICOS CON CHART.JS
+            // ----------------------------------------------------
+            const renderDashboardChart = (tabIndex) => {
+                const chartCanvas = document.getElementById("dashboard-chart");
+                if (!chartCanvas) return;
+
+                const qData = surveyData[tabIndex];
+
+                // Actualizar Textos informativos
+                document.getElementById("info-question-title").innerText = qData.question;
+                document.getElementById("info-question-desc").innerText = qData.desc;
+
+                // Destruir instancia anterior del gráfico si existe
+                if (activeChartInstance) {
+                    activeChartInstance.destroy();
+                }
+
+                // Configuración de estilos Chart.js para acoplar al tema deportivo oscuro
+                const chartConfig = {
+                    type: qData.type,
+                    data: {
+                        labels: qData.labels,
+                        datasets: [{
+                            label: 'Frecuencia (n=28)',
+                            data: qData.data,
+                            backgroundColor: qData.colors,
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1.5,
+                            hoverOffset: 12,
+                            borderRadius: qData.type === 'bar' ? 6 : 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: qData.type !== 'bar',
+                                position: 'bottom',
+                                labels: {
+                                    color: '#cbd5e1',
+                                    font: {
+                                        family: 'Inter',
+                                        size: 11
+                                    },
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                                titleColor: '#00f0ff',
+                                bodyColor: '#ffffff',
+                                borderColor: 'rgba(255, 255, 255, 0.08)',
+                                borderWidth: 1,
+                                callbacks: {
+                                    label: function(context) {
+                                        const val = context.raw;
+                                        const pct = qData.percentages[context.dataIndex];
+                                        return ` Frecuencia: ${val} atletas (${pct})`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: qData.type === 'bar' ? {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)'
+                                },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    font: { family: 'Inter', size: 10 }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    font: { family: 'Inter', size: 10 }
+                                }
+                            }
+                        } : {}
+                    }
+                };
+
+                // Crear el gráfico usando Chart.js
+                try {
+                    activeChartInstance = new Chart(chartCanvas, chartConfig);
+                } catch (error) {
+                    console.error("Error al inicializar Chart.js, cargando render alternativo.", error);
+                    // Si ocurre un error o no hay conexión, podemos construir una barra SVG dinámica en su lugar
+                    renderSVGAlternativeChart(chartCanvas.parentElement, qData);
+                }
+            };
+
+            // Lógica de pestañas del Dashboard
+            const tabButtons = document.querySelectorAll(".tab-btn");
+            tabButtons.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    // Remover active de todas las pestañas
+                    tabButtons.forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+
+                    const index = parseInt(btn.getAttribute("data-tab"));
+                    renderDashboardChart(index);
+                });
+            });
+
+            // Función de soporte alternativa en SVG en caso de ausencia de CDN de Chart.js
+            function renderSVGAlternativeChart(container, qData) {
+                container.innerHTML = `<div style="color:var(--accent-cyan); font-size:1.1rem; font-weight:700;">Render SVG Fallback</div>`;
+                // Construcción ligera de gráfico en SVG para portabilidad extrema fuera de red
+                let svgContent = `<svg viewBox="0 0 400 200" style="width:100%; height:100%;">`;
+                let x = 40;
+                const maxVal = Math.max(...qData.data);
+                qData.data.forEach((val, i) => {
+                    const height = (val / maxVal) * 150;
+                    const y = 170 - height;
+                    svgContent += `
+                        <rect x="${x}" y="${y}" width="40" height="${height}" fill="${qData.colors[i % qData.colors.length]}" rx="4" />
+                        <text x="${x + 20}" y="190" fill="#cbd5e1" font-size="8" text-anchor="middle">${qData.labels[i].substring(0, 8)}...</text>
+                        <text x="${x + 20}" y="${y - 8}" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">${val} (${qData.percentages[i]})</text>
+                    `;
+                    x += 70;
+                });
+                svgContent += `</svg>`;
+                container.innerHTML = svgContent;
+            }
+
+            // Inicializar diapositiva
+            updateSlideView();
+        });
+    </script>
+</body>
+</html>
